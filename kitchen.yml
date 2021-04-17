@@ -1,0 +1,36 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+  always_update_cookbooks: true
+
+verifier:
+  name: inspec
+  color: false
+
+platforms:
+  - name: centos-7
+
+suites:
+  - name: default
+  - name: dependency
+    attributes:
+      scheduled_run_list:
+        run_list:
+          - test_cookbook::run_list
+          - chef_client_updater
+          - test_cookbook::run_list2
+  - name: noop
+    attributes:
+      scheduled_run_list:
+        run_list: null
+  - name: passed
+    attributes:
+      scheduled_run_list:
+        year: 2020
+  - name: pending
+    attributes:
+      scheduled_run_list:
+        year: 2022
