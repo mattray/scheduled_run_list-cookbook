@@ -57,6 +57,7 @@ suites:
     attributes:
       scheduled_run_list:
         download: file://localhost/test/download.json
+        year: 2020 # this is to _not_ run if not downloaded
     verifier:
       inspec_tests:
         - test/integration/download

@@ -5,6 +5,9 @@
 
 run_list = node['scheduled_run_list']['run_list']
 
+# parse in cache files
+# node['scheduled_run_list']['processed'] = []
+
 # check if there is a run list set
 if run_list.nil?
   log "NO SCHEDULED RUN LIST"
@@ -23,7 +26,7 @@ else
     log "Scheduled Run List:PENDING"
   elsif date < current_date
     log "Scheduled Run List:ENDED"
-    # test to see if executed or not
+  # test to see if executed or not
   else
     if (start <= current_time) && (current_time <= finish)
       log "Scheduled Run List:EXECUTING"
@@ -31,11 +34,16 @@ else
         include_recipe recipe
       end
       ruby_block "Scheduled Run List:COMPLETED" do
-      block do
-        ts = "#{date}-#{start}-#{finish}"
-        rl = run_list.to_s
-        node.default['scheduled_run_list']['processed'][ts] = rl
-        throw :end_client_run_early
+        block do
+          ts = "#{date}-#{start}-#{finish}"
+          rl = run_list.to_s
+          node.default['scheduled_run_list']['processed'][ts] = rl
+
+          # /var/cache/chef/2021-04-15-1545-1600
+          # -> stick in an attribute
+          # node[ '2021-04-15-1545-1600', '2021-04-16-1545-1600']
+
+          throw :end_client_run_early
         end
       end
     end
