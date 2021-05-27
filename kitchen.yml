@@ -1,6 +1,8 @@
 ---
 driver:
   name: vagrant
+  synced_folders:
+      - ['test', '/test', 'create: true', owner: "root", group: "root"]
 
 provisioner:
   name: chef_zero
@@ -15,6 +17,9 @@ platforms:
 
 suites:
   - name: default
+    verifier:
+      inspec_tests:
+        - test/integration/default
   - name: dependency
     attributes:
       scheduled_run_list:
@@ -22,15 +27,36 @@ suites:
           - test_cookbook::run_list
           - chef_client_updater
           - test_cookbook::run_list2
+    verifier:
+      inspec_tests:
+        - test/integration/dependency
   - name: noop
     attributes:
       scheduled_run_list:
         run_list: null
+    verifier:
+      inspec_tests:
+        - test/integration/noop
   - name: passed
     attributes:
       scheduled_run_list:
         year: 2020
+    verifier:
+      inspec_tests:
+        - test/integration/passed
   - name: pending
     attributes:
       scheduled_run_list:
         year: 2022
+    verifier:
+      inspec_tests:
+        - test/integration/pending
+  - name: download
+    provisioner:
+      named_run_list: download
+    attributes:
+      scheduled_run_list:
+        download: file://localhost/test/download.json
+    verifier:
+      inspec_tests:
+        - test/integration/download
