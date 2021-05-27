@@ -31,8 +31,11 @@ else
         include_recipe recipe
       end
       ruby_block "Scheduled Run List:COMPLETED" do
-        block do
-          throw :end_client_run_early
+      block do
+        ts = "#{date}-#{start}-#{finish}"
+        rl = run_list.to_s
+        node.default['scheduled_run_list']['processed'][ts] = rl
+        throw :end_client_run_early
         end
       end
     end
