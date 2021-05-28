@@ -1,12 +1,21 @@
 #
-# Cookbook:: scheduled_runlist
+# Cookbook:: scheduled_run_list
 # Recipe:: default
 #
 
 run_list = node['scheduled_run_list']['run_list']
 
-# parse in cache files
-# node['scheduled_run_list']['processed'] = []
+srl_dir = "#{Chef::Config[:file_cache_path]}/scheduled_run_list"
+
+directory srl_dir  do
+  compile_time true
+end.run_action(:create)
+
+# parse already run run lists
+Dir.entries(srl_dir).each do |cached_srl_file|
+  next unless File.fnmatch?('2*-*-*', cached_srl_file)
+  node.default['scheduled_run_list']['processed'][::File.basename(cached_srl_file)] = ::File.read("#{srl_dir}/#{cached_srl_file}")
+end
 
 # check if there is a run list set
 if run_list.nil?
@@ -22,7 +31,11 @@ else
   log "Scheduled Run List:#{run_list}"
   log "Scheduled Run List:#{date} between #{start} and #{finish}:currently #{current_date}-#{current_time} "
 
-  if current_date < date
+  timestamp = "#{date}-#{start}-#{finish}"
+
+  if node['scheduled_run_list']['processed'].keys.include?(timestamp)
+    log "Scheduled Run List:ALREADY EXECUTED"
+  elsif current_date < date
     log "Scheduled Run List:PENDING"
   elsif date < current_date
     log "Scheduled Run List:ENDED"
@@ -33,16 +46,15 @@ else
       run_list.each do |recipe|
         include_recipe recipe
       end
+      srl_file = srl_dir + "/" + timestamp
+      rl = run_list.to_s
+      # write out cache file indicating work done
+      file srl_file do
+        content rl
+      end
       ruby_block "Scheduled Run List:COMPLETED" do
         block do
-          ts = "#{date}-#{start}-#{finish}"
-          rl = run_list.to_s
-          node.default['scheduled_run_list']['processed'][ts] = rl
-
-          # /var/cache/chef/2021-04-15-1545-1600
-          # -> stick in an attribute
-          # node[ '2021-04-15-1545-1600', '2021-04-16-1545-1600']
-
+          node.default['scheduled_run_list']['processed'][timestamp] = rl
           throw :end_client_run_early
         end
       end
