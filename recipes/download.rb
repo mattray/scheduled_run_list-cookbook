@@ -15,8 +15,6 @@ else
   end.run_action(:create)
 
   # parse the JSON
-  # ruby_block "Scheduled Run List:DOWNLOADED RUN LIST & SCHEDULE" do
-  #   block do
   json = JSON.parse(::File.read(file))
   node.override['scheduled_run_list']['year'] = json['year']
   node.override['scheduled_run_list']['month'] = json['month']
@@ -24,6 +22,4 @@ else
   node.override['scheduled_run_list']['time-start'] = json['time-start']
   node.override['scheduled_run_list']['time-end'] = json['time-end']
   node.override['scheduled_run_list']['run_list'] = json['run_list']
-  #   end
-  # end
 end
